@@ -65,8 +65,22 @@ export default function ProfessorPage() {
     const [erroNovoAluno, setErroNovoAluno] = useState<string | null>(null);
 
     useEffect(() => {
-        carregarDashboard();
+        checkRoleAndLoad();
     }, []);
+
+    async function checkRoleAndLoad() {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        // Verifica metadata.role (fallback para 'teacher' ou 'professor')
+        const role = user?.user_metadata?.role;
+        if (role !== "professor" && role !== "teacher") {
+            await supabase.auth.signOut();
+            window.location.href = "/login?error=Acesso restrito a professores.";
+            return;
+        }
+
+        carregarDashboard();
+    }
 
     async function carregarDashboard() {
         try {

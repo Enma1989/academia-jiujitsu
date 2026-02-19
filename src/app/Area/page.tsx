@@ -11,13 +11,13 @@ export default function AreaRedirect() {
         async function verificar() {
             const { data: { user }, error } = await supabase.auth.getUser();
             if (error) {
-                router.replace("/area-do-aluno");
+                router.replace("/professor");
                 return;
             }
 
             // Não logado => vai pro login
             if (!user) {
-                router.replace("/area-do-aluno");
+                router.replace("/login");
                 return;
             }
 
@@ -28,7 +28,7 @@ export default function AreaRedirect() {
             }
 
             // Qualquer outro => aluno
-            router.replace("/area-do-aluno/dashboard");
+            router.replace("/professor");
         }
 
         verificar();
