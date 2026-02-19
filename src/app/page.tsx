@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Contact } from "@/components/Contact";
@@ -16,28 +16,7 @@ const NAV_ITEMS = [
 ];
 
 export default function Home() {
-  const videoMatutoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    const video = videoMatutoRef.current;
-    if (!video) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            video.play().catch(() => { });
-          } else {
-            video.pause();
-          }
-        });
-      },
-      { threshold: 0.4 }
-    );
-
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, []);
+  // Video effect logic removed for YouTube embed
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-50 scroll-smooth pt-20">
@@ -298,15 +277,16 @@ export default function Home() {
 
       {/* VÍDEO */}
       <section id="team-matuto" className="relative overflow-hidden bg-black">
-        <div className="absolute inset-0">
-          <video
-            ref={videoMatutoRef}
-            className="h-full w-full object-cover"
-            src="/Video-Academia.mp4"
-            muted
-            loop
-            playsInline
-          />
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="relative h-full w-full overflow-hidden">
+            <iframe
+              className="absolute top-1/2 left-1/2 min-w-full min-h-full w-[177.77vh] h-[56.25vw] -translate-x-1/2 -translate-y-1/2 object-cover"
+              src="https://www.youtube.com/embed/ktFNK-6ZwIs?autoplay=1&mute=1&controls=0&loop=1&playlist=ktFNK-6ZwIs&playsinline=1&showinfo=0&rel=0&iv_load_policy=3&disablekb=1"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ pointerEvents: "none" }}
+            />
+          </div>
           <div className="absolute inset-0 bg-black/60" />
         </div>
 
