@@ -31,15 +31,31 @@ export async function middleware(request: NextRequest) {
         }
     );
 
-    // Refresh session if expired
+    // 1. Get User (Refresh Session)
     const {
         data: { user },
     } = await supabase.auth.getUser();
 
-    // Route Protection for /professor
+    // 2. Protect /professor route
     if (request.nextUrl.pathname.startsWith("/professor")) {
+        // Not logged in -> Redirect to login
         if (!user) {
             return NextResponse.redirect(new URL("/login", request.url));
+        }
+
+        // Logged in -> Check Role in public.profiles
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+
+        const userRole = profile?.role;
+
+        // If no role or not authorized -> Redirect to login with error
+        if (!userRole || !["admin", "teacher", "professor"].includes(userRole)) {
+            // Optional: Sign out is client-side usually, but we block access here.
+            return NextResponse.redirect(new URL("/login?error=forbidden", request.url));
         }
     }
 

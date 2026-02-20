@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
         // 3. Supabase Auth
         const supabase = await createClient();
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
@@ -69,6 +69,22 @@ export async function POST(request: Request) {
             return NextResponse.json(
                 { error: "Credenciais inválidas ou erro no login." },
                 { status: 401 }
+            );
+        }
+
+        // Check Role
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", data.user.id)
+            .single();
+
+        const userRole = profile?.role;
+        if (!userRole || !["admin", "teacher", "professor"].includes(userRole)) {
+            await supabase.auth.signOut();
+            return NextResponse.json(
+                { error: "Acesso restrito a professores/admins." },
+                { status: 403 }
             );
         }
 

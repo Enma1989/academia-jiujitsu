@@ -30,7 +30,8 @@ export default function LoginPage() {
             }
 
             // Sucesso: redireciona
-            router.push("/professor");
+            // Força reload para garantir que o cookie da sessão seja enviado ao middleware
+            window.location.href = "/professor";
         } catch (err) {
             setErro((err as Error).message);
         } finally {
