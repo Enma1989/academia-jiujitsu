@@ -6,13 +6,13 @@ export function Schedule() {
                 { name: "Adultos", time: "07h às 08h" },
                 { name: "Kids 1", time: "18h às 19h" },
                 { name: "Kids 2", time: "19h30 às 20h30" },
-                { name: "Adultos", time: "20h30 às 22h" },
+                { name: "Adultos", time: "20h30 às 21h30" },
             ],
         },
         {
             days: "Terça e Quinta",
             classes: [
-                { name: "Treinos de Competição e Funcional", time: "20h às 21h30" },
+                { name: "Treinos de Competição e Funcional", time: "20h às 21h" },
             ],
         },
     ];
