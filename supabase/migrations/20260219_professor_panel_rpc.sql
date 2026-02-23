@@ -33,7 +33,7 @@ returns table (
   turma_id bigint,
   ativo boolean,
   dia_vencimento int,
-  criado_em timestamptz,
+  created_at timestamptz,
   plano_nome text,
   turma_nome text
 )
@@ -57,7 +57,7 @@ begin
     a.turma_id,
     a.ativo,
     a.dia_vencimento,
-    a.criado_em,
+    a.created_at,
     p.nome as plano_nome,
     t.nome as turma_nome
   from public.alunos a
@@ -69,7 +69,7 @@ begin
     a.email ilike '%' || p_search || '%' or
     a.telefone ilike '%' || p_search || '%'
   )
-  order by a.criado_em desc
+  order by a.created_at desc
   limit p_limit
   offset p_offset;
 end;
@@ -145,7 +145,7 @@ returns table (
   data_vencimento date, -- Using data_vencimento as reference date
   status text,
   observacao text,
-  criado_em timestamptz,
+  created_at timestamptz,
   aluno_nome text
 )
 language plpgsql
@@ -165,7 +165,7 @@ begin
     pg.data_vencimento,
     pg.status,
     pg.observacao,
-    pg.criado_em,
+    pg.created_at,
     a.nome as aluno_nome
   from public.pagamentos pg
   join public.alunos a on pg.aluno_id = a.id
@@ -173,7 +173,7 @@ begin
   and (p_status is null or pg.status = p_status)
   and (p_inicio is null or pg.data_vencimento >= p_inicio)
   and (p_fim is null or pg.data_vencimento <= p_fim)
-  order by pg.criado_em desc
+  order by pg.created_at desc
   limit p_limit
   offset p_offset;
 end;

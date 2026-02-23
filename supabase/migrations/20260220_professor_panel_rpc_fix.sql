@@ -49,7 +49,7 @@ returns table (
   ativo boolean,
   dia_vencimento int,
   status text,
-  criado_em timestamptz
+  created_at timestamptz
 )
 language plpgsql
 security definer
@@ -74,7 +74,7 @@ begin
     a.ativo,
     a.dia_vencimento,
     case when a.ativo then 'Ativo'::text else 'Inativo'::text end as status,
-    a.criado_em
+    a.created_at
   from public.alunos a
   left join public.planos p on a.plano_id = p.id
   left join public.turmas t on a.turma_id = t.id
@@ -83,7 +83,7 @@ begin
      a.nome ilike '%' || p_search || '%' or
      a.email ilike '%' || p_search || '%' or
      a.telefone ilike '%' || p_search || '%')
-  order by a.criado_em desc
+  order by a.created_at desc
   limit p_limit
   offset p_offset;
 end;
@@ -164,7 +164,7 @@ returns table (
   mes_ref date,
   status text,
   observacao text,
-  criado_em timestamptz
+  created_at timestamptz
 )
 language plpgsql
 security definer
@@ -184,7 +184,7 @@ begin
     pg.mes_ref, -- Assuming column is mes_ref or we map data_vencimento? Spec says mes_ref query: public.pagamentos...
     pg.status,
     pg.observacao,
-    pg.criado_em
+    pg.created_at
   from public.pagamentos pg
   join public.alunos a on pg.aluno_id = a.id
   where
@@ -192,7 +192,7 @@ begin
     and (p_status is null or pg.status = p_status)
     and (p_inicio is null or pg.mes_ref >= p_inicio)
     and (p_fim is null or pg.mes_ref <= p_fim)
-  order by pg.mes_ref desc, pg.criado_em desc
+  order by pg.mes_ref desc, pg.created_at desc
   limit p_limit
   offset p_offset;
 end;

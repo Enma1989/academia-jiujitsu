@@ -35,8 +35,11 @@ export default function AreaRedirect() {
     }, [router]);
 
     return (
-        <main className="min-h-screen bg-zinc-950 text-zinc-50 flex items-center justify-center">
-            <p className="text-sm text-zinc-400">Redirecionando...</p>
+        <main className="min-h-screen bg-[#FBFBFB] flex items-center justify-center">
+            <div className="text-center space-y-4">
+                <div className="inline-block w-8 h-8 border-4 border-zinc-200 border-t-red-600 rounded-full animate-spin"></div>
+                <p className="text-sm font-bold uppercase tracking-widest text-zinc-400">Redirecionando...</p>
+            </div>
         </main>
     );
 }

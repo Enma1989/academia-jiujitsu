@@ -1,29 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabaseBrowser";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type Plano = {
-    id: string; // UUID
+    id: string;
     nome: string;
     valor: number;
 };
 
 type Turma = {
-    id: string; // UUID
+    id: string;
     nome: string;
     dias_semana: string;
     hora_inicio: string;
     hora_fim: string;
 };
 
-export default function NovoAlunoPage() {
+export default function EditarAlunoPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const supabase = createClient();
     const router = useRouter();
 
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
 
     // Dropdown data
@@ -43,24 +45,43 @@ export default function NovoAlunoPage() {
     });
 
     useEffect(() => {
-        carregarOpcoes();
-    }, []);
+        carregarDados();
+    }, [id]);
 
-    async function carregarOpcoes() {
+    async function carregarDados() {
         try {
-            const [planosRes, turmasRes] = await Promise.all([
+            setLoading(true);
+
+            // Load Options & Student Data
+            const [planosRes, turmasRes, alunoRes] = await Promise.all([
                 supabase.from("planos").select("id, nome, valor").order("nome"),
                 supabase.from("turmas").select("id, nome, dias_semana, hora_inicio, hora_fim").order("nome"),
+                supabase.from("alunos").select("*").eq("id", id).single()
             ]);
 
             if (planosRes.error) throw planosRes.error;
             if (turmasRes.error) throw turmasRes.error;
+            if (alunoRes.error) throw alunoRes.error;
 
             setPlanos(planosRes.data || []);
             setTurmas(turmasRes.data || []);
+
+            const a = alunoRes.data;
+            setFormData({
+                nome: a.nome || "",
+                email: a.email || "",
+                telefone: a.telefone || "",
+                data_nascimento: a.data_nascimento || "",
+                plano_id: a.plano_id || "",
+                turma_id: a.turma_id || "",
+                dia_vencimento: a.dia_vencimento?.toString() || "",
+                ativo: a.ativo ?? true,
+            });
         } catch (err: any) {
-            console.error("Erro ao carregar opções:", err);
-            setErro(err.message || "Falha ao carregar planos e turmas.");
+            console.error("Erro ao carregar dados:", err);
+            setErro(err.message || "Falha ao carregar dados do aluno.");
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -74,39 +95,54 @@ export default function NovoAlunoPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setSaving(true);
         setErro(null);
 
         try {
-            const { error } = await supabase.from("alunos").insert({
-                nome: formData.nome,
-                email: formData.email,
-                telefone: formData.telefone || null,
-                data_nascimento: formData.data_nascimento || null,
-                plano_id: formData.plano_id || null,
-                turma_id: formData.turma_id || null,
-                dia_vencimento: formData.dia_vencimento ? parseInt(formData.dia_vencimento) : null,
-                ativo: formData.ativo,
-            });
+            const { error } = await supabase
+                .from("alunos")
+                .update({
+                    nome: formData.nome,
+                    email: formData.email,
+                    telefone: formData.telefone || null,
+                    data_nascimento: formData.data_nascimento || null,
+                    plano_id: formData.plano_id || null,
+                    turma_id: formData.turma_id || null,
+                    dia_vencimento: formData.dia_vencimento ? parseInt(formData.dia_vencimento) : null,
+                    ativo: formData.ativo,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", id);
 
             if (error) throw error;
 
             router.push("/professor/alunos");
             router.refresh();
         } catch (err: any) {
-            console.error("Erro ao cadastrar aluno:", err);
-            setErro(err.message || "Erro desconhecido ao salvar aluno.");
+            console.error("Erro ao atualizar aluno:", err);
+            setErro(err.message || "Erro ao salvar alterações.");
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-[#FBFBFB] text-zinc-400">
+                <div className="text-center space-y-4">
+                    <div className="inline-block w-8 h-8 border-4 border-zinc-200 border-t-red-600 rounded-full animate-spin"></div>
+                    <p className="font-medium">Carregando dados do aluno...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="mx-auto max-w-4xl px-4 py-6 space-y-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-4xl font-extrabold text-zinc-900 tracking-tight">Novo Aluno</h1>
-                    <p className="text-zinc-500 font-medium">Preencha os dados abaixo para cadastrar um novo integrante.</p>
+                    <h1 className="text-4xl font-extrabold text-zinc-900 tracking-tight">Editar Aluno</h1>
+                    <p className="text-zinc-500 font-medium">Atualize as informações cadastrais do aluno.</p>
                 </div>
                 <Link
                     href="/professor/alunos"
@@ -151,7 +187,6 @@ export default function NovoAlunoPage() {
                                     value={formData.nome}
                                     onChange={handleChange}
                                     className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-zinc-900 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all placeholder-zinc-300 font-medium"
-                                    placeholder="Ex: João Silva"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -163,7 +198,6 @@ export default function NovoAlunoPage() {
                                     value={formData.email}
                                     onChange={handleChange}
                                     className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-zinc-900 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all placeholder-zinc-300 font-medium"
-                                    placeholder="joao@exemplo.com"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -244,7 +278,7 @@ export default function NovoAlunoPage() {
                                     value={formData.dia_vencimento}
                                     onChange={handleChange}
                                     placeholder="Ex: 5, 10, 15..."
-                                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-zinc-900 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all font-medium placeholder-zinc-300"
+                                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50/50 px-4 py-3 text-zinc-900 focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all font-medium"
                                 />
                             </div>
 
@@ -274,10 +308,10 @@ export default function NovoAlunoPage() {
                         </Link>
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={saving}
                             className="flex-[2] rounded-xl bg-red-600 py-4 text-xs font-bold uppercase tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-500 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:active:scale-100"
                         >
-                            {loading ? "Salvando..." : "Cadastrar Aluno"}
+                            {saving ? "Salvando..." : "Salvar Alterações"}
                         </button>
                     </div>
                 </form>
